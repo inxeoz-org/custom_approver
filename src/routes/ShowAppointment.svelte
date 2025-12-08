@@ -1,38 +1,41 @@
 <script lang="ts">
     import { onMount, onDestroy, createEventDispatcher, tick } from "svelte";
     import { Button, Modal, Badge } from "flowbite-svelte";
-    import { formatDateTime } from "@src/utils.js";
+    import { badgeClass } from "@src/utils.js";
 
-    import {
-        get_appointment,
-        approve_appointment,
-        reject_appointment,
-    } from "@src/helper_approver.js";
+    import { getAppointment } from "@src/api.js";
+    import StaticShowDarshanAppointment from "@src/routes/StaticShowDarshanAppointment.svelte";
+    import { auth_token } from "@src/store.js";
+    import { get } from "svelte/store";
+    import { toast } from "svelte-sonner";
+    import type { AppointmentFull } from "@src/app.js";
+    import { stringify } from "postcss";
 
     let workflow_state = "Demo";
 
-    export let appointmentId: string;
+    let appointment: AppointmentFull;
+
+    export let appointment_id: string;
 
     const dispatch = createEventDispatcher();
 
     let loading = false;
+    // let submitting = false;
     let error: string | null = null;
-    let data: any = null;
     let showRaw = false;
     // local modal open — used for Flowbite's bind:open (triggers modal open/close)
     let open = true;
+    let showView = false;
 
-    async function fetchAppointment() {
-        loading = true;
-        error = null;
-        try {
-            const payload = await get_appointment(appointmentId);
-            data = payload?.message ?? payload;
-            workflow_state = data.workflow_state;
-        } catch (err: any) {
-            error = err?.message ?? String(err);
-        } finally {
-            loading = false;
+    async function refrash_appointment() {
+        // loading = true;
+        if (appointment_id) {
+            const result_data = await getAppointment(
+                get(auth_token),
+                appointment_id,
+            );
+
+            appointment = result_data?.message;
         }
     }
 
@@ -54,8 +57,9 @@
         if (e.key === "Escape") handleClose();
     }
 
-    onMount(() => {
-        fetchAppointment();
+    onMount(async () => {
+        loading = true;
+        await refrash_appointment();
         window.addEventListener("keydown", onKeydown);
     });
 
@@ -63,20 +67,16 @@
         window.removeEventListener("keydown", onKeydown);
     });
 
-    // safe stringify to avoid circular JSON crashes
-    function safeStringify(obj: any, space = 2) {
-        const seen = new WeakSet();
-        return JSON.stringify(
-            obj,
-            function (key, value) {
-                if (typeof value === "object" && value !== null) {
-                    if (seen.has(value)) return "[Circular]";
-                    seen.add(value);
-                }
-                return value;
-            },
-            space,
-        );
+    async function approve_appointment() {
+        if (!appointment_id) return;
+    }
+
+    function reject_appointment() {
+        if (!appointment_id) return;
+    }
+
+    function cancel_appointment() {
+        if (!appointment_id) return;
     }
 </script>
 
@@ -85,70 +85,41 @@
         <div class="text-center text-gray-500 py-6">Loading appointment…</div>
     {:else if error}
         <div class="p-3 bg-red-50 text-red-600 rounded-md">Error: {error}</div>
-    {:else if data}
+    {:else if appointment}
         <div class="grid grid-cols-2 gap-3 mb-4">
             <div>
-                <strong>Primary Devotee:</strong>
-
-                <Badge color="green">
-                    {data.primary_devoteee_name ?? "—"}
-                </Badge>
-            </div>
-
-            <div>
                 <strong>Appointment ID:</strong>
-                {data.name ?? data.appointment_id ?? "—"}
+                {appointment.name}
             </div>
             <div>
                 <strong>Status:</strong>
-
-                <Badge
-                    color={data.workflow_state === "Approved"
-                        ? "green"
-                        : data.workflow_state === "Pending"
-                          ? "orange"
-                          : "red"}
-                >
-                    {data.workflow_state ?? data.status ?? "—"}
+                <Badge color={badgeClass(appointment.workflow_state)}>
+                    {appointment.workflow_state ?? "—"}
                 </Badge>
             </div>
-            <div><strong>Type:</strong> {data.appointment_type ?? "—"}</div>
+
             <div>
                 <strong>Date:</strong>
-                {data.appointment_date}
+                {appointment.slot_date}
             </div>
 
             <div>
-                <strong>Time:</strong>
-                {data.slot_start_time} to {data.slot_end_time}
+                <strong>Slot</strong>
+                {appointment.slot}
             </div>
 
-            {#if data.darshan_with_protocol}
+            {#if appointment.protocol}
                 <div>
-                    <strong>With Protocol:</strong>
-                    {data.darshan_with_protocol ? "Yes" : "No"}
-                </div>
-                <div><strong>Protocol Rank:</strong> {data.protocol_rank}</div>
-            {/if}
-
-            {#if data.government_authority_letter}
-                <div class="col-span-2">
-                    <strong>Authority Letter:</strong>
-                    {data.government_authority_letter}
-                </div>
-            {/if}
-            {#if data.devoteee_name}
-                <div class="col-span-2">
-                    <strong>Devoteee Name:</strong>
-                    {data.devoteee_name}
+                    <strong>Protocol:</strong>
+                    {appointment.protocol}
                 </div>
             {/if}
 
-            {#if data.group_size}
+            {#if appointment.group_size}
                 <div class="col-span-2">
                     <strong>Group Size:</strong>
                     <Badge color="blue">
-                        {data.group_size ?? data.status ?? "—"}
+                        {appointment.group_size ?? "—"}
                     </Badge>
                 </div>
             {/if}
@@ -156,27 +127,27 @@
 
         <div class="mb-3">
             <h3 class="font-semibold mb-1">Companions</h3>
-            {#if Array.isArray(data.darshan_companion) && data.darshan_companion.length > 0}
+            {#if Array.isArray(appointment.companion) && appointment.companion.length > 0}
                 <ul class="divide-y divide-gray-200 border rounded-md">
-                    {#each data.darshan_companion as c}
+                    {#each appointment.companion as c}
                         <li class="flex justify-between items-center p-2">
                             <div class="w-1/3">
                                 <div class="font-semibold text-gray-800">
                                     {c.companion_name ?? "Unknown"}
                                 </div>
                                 <div class="text-sm text-gray-500">
-                                    {c.companion_gender ?? ""}
+                                    {c.gender ?? ""}
                                 </div>
                             </div>
                             <div class="w-1/6">
                                 <div class="text-gray-800 font-medium">
-                                    Age {c.companion_age ?? "—"}
+                                    Age {c.age ?? "—"}
                                 </div>
                             </div>
                             <div class=" w-1/3">
                                 phone :
                                 <Badge color="green">
-                                    {c.companion_phone ?? "—"}
+                                    {c.phone ?? "—"}
                                 </Badge>
                             </div>
                         </li>
@@ -190,7 +161,28 @@
         </div>
 
         <div>
-            <div>
+            <div class="flex flex-wrap gap-2 mb-4">
+                {#if workflow_state !== "Pending"}
+                    <Button
+                        color={"green"}
+                        size="sm"
+                        onclick={approve_appointment}
+                    >
+                        Approve Appointment
+                    </Button>
+                    <Button
+                        color="orange"
+                        size="sm"
+                        onclick={reject_appointment}
+                    >
+                        Reject Appointment
+                    </Button>
+
+                    <Button color="gray" size="sm" onclick={cancel_appointment}>
+                        Cancel Appointment
+                    </Button>
+                {/if}
+
                 <Button
                     color="light"
                     size="sm"
@@ -204,7 +196,7 @@
                     size="sm"
                     onclick={() => {
                         navigator.clipboard
-                            .writeText(safeStringify(data, 2))
+                            .writeText(JSON.stringify(appointment, null, 2))
                             .then(() => alert("JSON copied to clipboard!"))
                             .catch(() => alert("Failed to copy JSON"));
                     }}
@@ -216,33 +208,14 @@
             {#if showRaw}
                 <pre
                     class="bg-gray-900 text-gray-100 mt-2 p-2 rounded overflow-auto max-h-60 text-sm">
-{safeStringify(data, 2)}</pre>
+{JSON.stringify(appointment, null, 2)}</pre>
             {/if}
         </div>
     {:else}
-        <div class="text-center text-gray-500 py-6">No data available.</div>
+        <div class="text-center text-gray-500 py-6">
+            No appointment available.
+        </div>
     {/if}
-
-    {#snippet footer()}
-        {#if workflow_state === "Pending"}
-            <div class="flex justify-end items-center w-full gap-8">
-                <Button
-                    color="primary"
-                    pill
-                    onclick={async () => {
-                        reject_appointment(appointmentId);
-                        await fetchAppointment();
-                    }}>Reject</Button
-                >
-                <Button
-                    color="green"
-                    pill
-                    onclick={async () => {
-                        approve_appointment(appointmentId);
-                        await fetchAppointment();
-                    }}>Approve</Button
-                >
-            </div>
-        {/if}
-    {/snippet}
 </Modal>
+
+<StaticShowDarshanAppointment bind:open={showView} {appointment_id} />

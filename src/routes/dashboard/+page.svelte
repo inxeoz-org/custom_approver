@@ -4,16 +4,6 @@
     import ShowAppointment from "@src/routes/ShowAppointment.svelte";
     import { Card, Button, Badge } from "flowbite-svelte";
 
-    import {
-        get_appointment_stats,
-        get_appointment_list,
-        get_appointment,
-        approve_appointment,
-        reject_appointment,
-    } from "@src/helper_approver.js";
-
-    import type { Booking, Status } from "@src/appointment.js";
-
     // --- public props (adjustable) ---
     export let limitStart = 0;
     export let pageLength = 20;
@@ -27,34 +17,8 @@
     let loading = false;
     let error: string | null = null;
 
-    // stats structure is { "Vip Darshan": {Pending: 1, Approved:0,...}, ... }
-    let stats: Record<string, Record<string, number>> = {};
-    let bookings: Booking[] = []; // pending bookings list
     let show = false;
     let selectedId: string | null = null;
-
-    function badgeClass(status: Status | string) {
-        switch (status) {
-            case "Approved":
-                return "green";
-            case "Pending":
-                return "orange";
-            case "Pending Verification":
-                return "blue";
-            case "Rejected":
-                return "red";
-            default:
-                return "gray";
-        }
-    }
-
-    // normalize keys returned by API to display order & titles we want
-    const DARSHAN_ORDER = [
-        { key: "Vip Darshan", title: "VIP Darshan" },
-        { key: "Bhasm Arti", title: "Bhasm Arti" },
-        { key: "Shigra Darshan", title: "Shigra Darshan" },
-        { key: "Localide Darshan", title: "Localide Darshan" },
-    ];
 
     // --- API calls ---
     async function fetchStats() {
@@ -98,35 +62,6 @@
     }
     function handleModalClose() {
         show = false;
-    }
-
-    // Approve / Reject a single appointment (by id/name)
-    async function approveSingle(appointment_id: string) {
-        loading = true;
-        error = null;
-        try {
-            await approve_appointment(appointment_id);
-            await fetchStats();
-            await fetchBookings();
-        } catch (err: any) {
-            error = err?.message ?? "Approve failed";
-        } finally {
-            loading = false;
-        }
-    }
-
-    async function rejectSingle(appointment_id: string) {
-        loading = true;
-        error = null;
-        try {
-            await reject_appointment(appointment_id);
-            await fetchStats();
-            await fetchBookings();
-        } catch (err: any) {
-            error = err?.message ?? "Reject failed";
-        } finally {
-            loading = false;
-        }
     }
 </script>
 
