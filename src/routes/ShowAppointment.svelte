@@ -8,15 +8,19 @@
         getAppointment,
         rejectAppointment,
         cancelAppointment,
+        getAttenderList,
     } from "@src/api.js";
     import StaticShowDarshanAppointment from "@src/routes/StaticShowDarshanAppointment.svelte";
     import { auth_token } from "@src/store.js";
     import { get } from "svelte/store";
     import { toast } from "svelte-sonner";
-    import type { Appointment } from "@src/app.js";
+    import type { Appointment, Attender } from "@src/app.js";
     import { stringify } from "postcss";
 
     let appointment: Appointment;
+
+    let selected_attender_id: string | null = null;
+    let attender_list: Attender[] = [];
 
     export let appointment_id: string;
 
@@ -35,6 +39,11 @@
         if (appointment_id) {
             const result_data = await getAppointment(appointment_id);
             appointment = result_data?.message;
+
+            if (appointment.workflow_state === "Pending") {
+                const attender_list_data = await getAttenderList();
+                attender_list = attender_list_data?.message;
+            }
         }
     }
 
@@ -147,6 +156,19 @@
                     No companions listed.
                 </div>
             {/if}
+
+            {#if appointment.workflow_state == "Pending"}
+                <select
+                    id="attender-select"
+                    class="w-full border border-gray-300 rounded-lg p-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
+                    bind:value={selected_attender_id}
+                >
+                    <option value="" disabled selected>Select Attender</option>
+                    {#each attender_list as a}
+                        <option value={a.name}>{a.name}</option>
+                    {/each}
+                </select>
+            {/if}
         </div>
 
         <div>
@@ -156,7 +178,10 @@
                         color={"green"}
                         size="sm"
                         onclick={() => {
-                            approveAppointment(appointment_id).then(() => {
+                            approveAppointment({
+                                appointmentId: appointment_id,
+                                attenderId: selected_attender_id,
+                            }).then(() => {
                                 refresh_appointment();
                             });
                         }}

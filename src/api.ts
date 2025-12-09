@@ -163,7 +163,13 @@ export async function getAppointment(appointmentId: string) {
   }
 }
 
-export async function approveAppointment(appointmentId: string) {
+export async function approveAppointment({
+  appointmentId,
+  attenderId,
+}: {
+  appointmentId: string;
+  attenderId: string | null;
+}) {
   try {
     const token = get(auth_token);
     const res = await fetch(
@@ -176,6 +182,7 @@ export async function approveAppointment(appointmentId: string) {
         },
         body: JSON.stringify({
           appointment_id: appointmentId,
+          attender_id: attenderId,
           action: "Approve",
         }),
       },
@@ -262,6 +269,23 @@ export async function getAppointmentStats() {
   try {
     const token = get(auth_token);
     const res = await fetch(APPROVER + "appointment.get_appointment_stats", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error("err", err);
+    return null;
+  }
+}
+
+export async function getAttenderList() {
+  try {
+    const token = get(auth_token);
+    const res = await fetch(APPROVER + "appointment.get_list_of_attenders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

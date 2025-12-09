@@ -84,3 +84,9 @@ export const AppointmenSchema = z.object({
 });
 
 export type Appointment = z.infer<typeof AppointmentSchema>;
+
+export const AttenderSchema = z.object({
+  name: z.string().min(1),
+});
+
+export type Attender = z.infer<typeof AttenderSchema>;
