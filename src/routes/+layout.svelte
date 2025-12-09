@@ -25,7 +25,6 @@
 
     <NavUl role="navigation" aria-label="Main navigation">
         <NavLi href="/">Home</NavLi>
-        <NavLi href="/registration">Approver Registration</NavLi>
         <NavLi href="/login">Login</NavLi>
         <NavLi href="/dashboard">Dashboard</NavLi>
         <NavLi href="/dashboard/profile">Profile</NavLi>
