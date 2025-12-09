@@ -1,6 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { get_self_profile, update_profile } from "@src/helper_approver.js";
+    import { getApproverProfile, updateProfile } from "@src/api.js";
+    import type { ApproverProfile } from "@src/app.js";
     import {
         Card,
         Avatar,
@@ -14,7 +15,7 @@
     import { onMount } from "svelte";
     import { toast } from "svelte-sonner";
 
-    let profle_data: any = null;
+    let profle_data: ApproverProfile;
 
     let name = "";
     let gender = "";
@@ -39,7 +40,7 @@
             aadhar: aadhar.trim(),
         };
 
-        const json = await update_profile(info);
+        const json = await updateProfile(info);
 
         toast(json?.message || "Profile saved.");
         submitted = true;
@@ -47,7 +48,7 @@
     }
 
     onMount(async () => {
-        profle_data = await get_self_profile();
+        profle_data = await getApproverProfile();
 
         name = profle_data?.approver_name ?? "";
         gender = profle_data?.gender ?? "";

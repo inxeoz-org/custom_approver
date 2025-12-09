@@ -18,8 +18,8 @@ export type Companion = z.infer<typeof CompanionSchema>;
 /* -------------------------------------------
    Devoteee Profile Schema + Type
 -------------------------------------------- */
-export const DevoteeeSchema = z.object({
-  devoteee_name: z.string().min(1),
+export const ApproverProfileSchema = z.object({
+  approver_name: z.string().min(1),
   email: z.string().email(),
   gender: z.string(),
 
@@ -44,7 +44,7 @@ export const DevoteeeSchema = z.object({
     .refine((v) => /^[6-9]\d{9}$/.test(v), "Invalid phone number"),
 });
 
-export type DevoteeeProfile = z.infer<typeof DevoteeeSchema>;
+export type ApproverProfile = z.infer<typeof ApproverProfileSchema>;
 
 /* -------------------------------------------
    Protocol Schema + Type

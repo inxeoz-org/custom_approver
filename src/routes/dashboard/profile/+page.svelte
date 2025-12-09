@@ -1,10 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { Card, Avatar, Badge, Button } from "flowbite-svelte";
-    import { get_self_profile } from "@src/helper_approver.js";
     import { goto } from "$app/navigation";
+    import { getApproverProfile } from "@src/api.js";
+    import type { ApproverProfile } from "@src/app.js";
 
-    let profile: any = null;
+    let profile: ApproverProfile;
     let error: string | null = null;
     let loading = true;
 
@@ -12,7 +13,7 @@
 
     onMount(async () => {
         try {
-            profile = await get_self_profile();
+            profile = await getApproverProfile();
         } catch (e) {
             error = "Failed to load profile";
             console.error(e);
@@ -70,7 +71,7 @@
                 <div class="flex justify-between border-b pb-2">
                     <span class="font-medium">Email</span>
                     <span class="text-sm text-gray-600"
-                        >{profile.email ?? profile.frappe_profile ?? "—"}</span
+                        >{profile.email ?? "—"}</span
                     >
                 </div>
 
