@@ -12,14 +12,10 @@
     const truthyInt = (v: any) => Number(v) === 1;
 
     onMount(async () => {
-        try {
-            profile = await getApproverProfile();
-        } catch (e) {
-            error = "Failed to load profile";
-            console.error(e);
-        } finally {
-            loading = false;
-        }
+        loading = true;
+        const result_data = await getApproverProfile();
+        profile = result_data?.message;
+        loading = false;
     });
 
     function updateProfile() {
