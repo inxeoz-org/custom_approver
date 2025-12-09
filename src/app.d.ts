@@ -20,7 +20,7 @@ export type Companion = z.infer<typeof CompanionSchema>;
 -------------------------------------------- */
 export const ApproverProfileSchema = z.object({
   approver_name: z.string().min(1),
-  email: z.string().email(),
+  email: z.string().email().nullable,
   gender: z.string(),
 
   dob: z.string().transform((val) => {
@@ -35,8 +35,6 @@ export const ApproverProfileSchema = z.object({
     .length(12, "Aadhar must be 12 digits"),
 
   location: z.string(),
-
-  companion: z.array(CompanionSchema),
 
   phone: z
     .string()

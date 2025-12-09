@@ -15,13 +15,15 @@
     import { onMount } from "svelte";
     import { toast } from "svelte-sonner";
 
-    let profle_data: ApproverProfile;
-
-    let name = "";
-    let gender = "";
-    let dob = "";
-    let address = "";
-    let aadhar = "";
+    let profile_data: ApproverProfile = {
+        email: null,
+        approver_name: "",
+        gender: "",
+        dob: "",
+        location: "",
+        aadhar: "",
+        phone: "",
+    };
 
     let touched = { name: false, gender: false, dob: false };
 
@@ -32,15 +34,7 @@
         e.preventDefault();
         loading = true;
 
-        const info = {
-            approver_name: name.trim(),
-            gender,
-            dob,
-            address: address.trim(),
-            aadhar: aadhar.trim(),
-        };
-
-        const json = await updateProfile(info);
+        const json = await updateProfile(profile_data);
 
         toast(json?.message || "Profile saved.");
         submitted = true;
@@ -48,13 +42,11 @@
     }
 
     onMount(async () => {
-        profle_data = await getApproverProfile();
+        loading = true;
+        const result = await getApproverProfile();
+        profile_data = result?.message;
 
-        name = profle_data?.approver_name ?? "";
-        gender = profle_data?.gender ?? "";
-        dob = profle_data?.dob ?? "";
-        address = profle_data?.address ?? "";
-        aadhar = profle_data?.aadhar ?? "";
+        loading = false;
     });
 </script>
 
@@ -67,7 +59,7 @@
                         size="xl"
                         stacked={false}
                         rounded={true}
-                        src={profle_data?.avatar || undefined}
+                        src={profile_data?.avatar || undefined}
                         alt="Profile avatar"
                     />
                 </div>
@@ -94,7 +86,7 @@
                     <Avatar
                         size="2xl"
                         rounded={true}
-                        src={profle_data?.avatar || undefined}
+                        src={profile_data?.avatar || undefined}
                         alt="User avatar"
                     />
                     <h2 class="mt-4 text-xl font-semibold">
@@ -119,7 +111,7 @@
                                     id="name"
                                     type="text"
                                     placeholder="John Doe"
-                                    bind:value={name}
+                                    bind:value={profile_data.approver_name}
                                     on:blur={() => (touched.name = true)}
                                     aria-required="false"
                                     class="mt-1"
@@ -130,16 +122,16 @@
                                 <Label for="gender">Gender</Label>
                                 <Select
                                     id="gender"
-                                    bind:value={gender}
+                                    bind:value={profile_data.gender}
                                     on:blur={() => (touched.gender = true)}
                                     class="mt-1"
                                 >
                                     <option value="" disabled selected
                                         >Select Gender</option
                                     >
-                                    <option value="female">Female</option>
-                                    <option value="male">Male</option>
-                                    <option value="non-binary"
+                                    <option value="Female">Female</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Non-binary"
                                         >Non-binary</option
                                     >
                                     <option value="prefer-not-to-say"
@@ -155,7 +147,7 @@
                                 <Input
                                     id="dob"
                                     type="date"
-                                    bind:value={dob}
+                                    bind:value={profile_data.dob}
                                     class="mt-1"
                                 />
                             </div>
@@ -166,7 +158,7 @@
                                     id="aadhar"
                                     type="text"
                                     placeholder="1234 5678 9012"
-                                    bind:value={aadhar}
+                                    bind:value={profile_data.aadhar}
                                     inputmode="numeric"
                                     maxlength="20"
                                     aria-label="Aadhar number"
@@ -181,7 +173,7 @@
                                 id="address"
                                 rows="3"
                                 placeholder="123 Main St, Anytown"
-                                bind:value={address}
+                                bind:value={profile_data.location}
                                 class="mt-1"
                             />
                         </div>
@@ -198,12 +190,10 @@
                                 <Button
                                     type="button"
                                     outline
-                                    on:click={() => {
-                                        name = profle_data?.approver_name ?? "";
-                                        gender = profle_data?.gender ?? "";
-                                        dob = profle_data?.dob ?? "";
-                                        address = profle_data?.address ?? "";
-                                        aadhar = profle_data?.aadhar ?? "";
+                                    on:click={async () => {
+                                        const result =
+                                            await getApproverProfile();
+                                        profile_data = result?.message;
                                     }}
                                 >
                                     Reset

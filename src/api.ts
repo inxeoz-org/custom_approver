@@ -6,6 +6,7 @@ const APPROVER = `${API_BASE}/api/method/custom_booking.custom_booking.doctype.a
 // Import store functions for logout
 import { auth_token, user_logged_in } from "@src/store.js";
 import { goto } from "$app/navigation";
+import type { ApproverProfile } from "./app.js";
 
 export async function loginCheck(phone: string) {
   try {
@@ -53,7 +54,7 @@ export async function getApproverProfile() {
   }
 }
 
-export async function updateProfile(profileData: any) {
+export async function updateProfile(profileData: ApproverProfile) {
   try {
     const token = get(auth_token);
     const res = await fetch(APPROVER + "profile.update_profile", {
