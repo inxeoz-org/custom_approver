@@ -3,7 +3,13 @@
     import { goto } from "$app/navigation";
     import ShowAppointment from "@src/routes/ShowAppointment.svelte";
     import { Card, Button, Badge } from "flowbite-svelte";
-
+    import {
+        approveAppointment,
+        getAppointmentList,
+        rejectAppointment,
+    } from "@src/api.js";
+    import type { Appointment } from "@src/app.js";
+    import { badgeClass } from "@src/utils.js";
     // --- public props (adjustable) ---
     export let limitStart = 0;
     export let pageLength = 20;
@@ -20,44 +26,24 @@
     let show = false;
     let selectedId: string | null = null;
 
-    // --- API calls ---
-    async function fetchStats() {
-        loading = true;
-        error = null;
-        try {
-            const payload = await get_appointment_stats();
-            stats = payload?.message ?? {};
-        } catch (err: any) {
-            error = err?.message ?? "Failed to fetch stats";
-            stats = {};
-        } finally {
-            loading = false;
-        }
-    }
+    let appointmentList: Appointment[] = [];
 
-    async function fetchBookings() {
-        loading = true;
-        error = null;
-        try {
-            const payload = await get_appointment_list(limitStart, pageLength);
-            bookings = payload?.message ?? [];
-        } catch (err: any) {
-            error = err?.message ?? "Failed to fetch bookings";
-            bookings = [];
-        } finally {
-            loading = false;
-        }
+    // --- API calls ---
+    async function refresh_appointments() {
+        const result = await getAppointmentList();
+        appointmentList = result?.message;
     }
 
     onMount(() => {
-        // fetch both
-        fetchStats();
-        fetchBookings();
+        loading = true;
+        refresh_appointments().then(() => {
+            loading = false;
+        });
     });
 
     // --- UI actions ---
-    function openModal(details: Booking) {
-        selectedId = details.name ?? details.id ?? null;
+    function openModal(id: string) {
+        selectedId = id;
         show = true;
     }
     function handleModalClose() {
@@ -79,8 +65,7 @@
                     <Button
                         color="light"
                         onclick={() => {
-                            fetchStats();
-                            fetchBookings();
+                            refresh_appointments();
                         }}
                         disabled={loading}
                     >
@@ -92,62 +77,6 @@
             <h2 class="text-lg font-bold text-slate-700 mt-6 mb-3">
                 {sectionTitle}
             </h2>
-
-            <!-- Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {#each DARSHAN_ORDER as d}
-                    <Card class="rounded-xl p-4">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-800">
-                                    {d.title}
-                                </h3>
-                                <div class="mt-2 text-sm text-slate-600">
-                                    <div
-                                        class="flex items-center justify-between"
-                                    >
-                                        <span>Received (Pending)</span>
-                                        <span
-                                            class="font-semibold text-red-500"
-                                        >
-                                            {stats[d.key]?.Pending ?? 0}
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="flex items-center justify-between mt-1"
-                                    >
-                                        <span>Approved</span>
-                                        <span
-                                            class="font-semibold text-green-600"
-                                            >{stats[d.key]?.Approved ?? 0}</span
-                                        >
-                                    </div>
-                                    <div
-                                        class="flex items-center justify-between mt-1"
-                                    >
-                                        <span>Rejected</span>
-                                        <span
-                                            class="font-semibold text-slate-500"
-                                            >{stats[d.key]?.Rejected ?? 0}</span
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs text-slate-400">
-                                    TOTAL BOOKINGS
-                                </div>
-                                <div class="text-2xl font-extrabold mt-1">
-                                    {Object.values(stats[d.key] ?? {}).reduce(
-                                        (a, b) => a + (b || 0),
-                                        0,
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-                {/each}
-            </div>
 
             <!-- Pending Bookings list -->
             <div class="mt-6 bg-slate-50 p-4 rounded-xl">
@@ -186,21 +115,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {#if loading && bookings.length === 0}
+                            {#if loading && appointmentList.length === 0}
                                 <tr
                                     ><td colspan="6" class="p-4 text-slate-500"
-                                        >Loading bookings…</td
+                                        >Loading appointmentList…</td
                                     ></tr
                                 >
-                            {:else if bookings.length === 0}
+                            {:else if appointmentList.length === 0}
                                 <tr
                                     ><td colspan="6" class="p-4 text-slate-500"
-                                        >No bookings found for the current
-                                        filters.</td
+                                        >No appointmentList found for the
+                                        current filters.</td
                                     ></tr
                                 >
                             {:else}
-                                {#each bookings as b (b.name)}
+                                {#each appointmentList as b (b.name)}
                                     <tr class="border-t">
                                         <td class="p-3 font-medium">{b.name}</td
                                         >
@@ -225,7 +154,8 @@
                                                 <Button
                                                     color="light"
                                                     size="xs"
-                                                    onclick={() => openModal(b)}
+                                                    onclick={() =>
+                                                        openModal(b.name)}
                                                     >Open</Button
                                                 >
 
@@ -237,9 +167,11 @@
                                                         onclick={async () => {
                                                             // quick approve single booking via helper
                                                             if (!b.name) return;
-                                                            await approveSingle(
+                                                            approveAppointment(
                                                                 b.name,
-                                                            );
+                                                            ).then(() => {
+                                                                refresh_appointments();
+                                                            });
                                                         }}>Approve</Button
                                                     >
 
@@ -250,9 +182,12 @@
                                                         onclick={async () => {
                                                             // quick reject single booking via helper
                                                             if (!b.name) return;
-                                                            await rejectSingle(
+                                                            rejectAppointment(
                                                                 b.name,
-                                                            );
+                                                            ).then(() => {
+                                                                refresh_appointments();
+                                                                // Handle success or failure
+                                                            });
                                                         }}>Reject</Button
                                                     >
                                                 {/if}
@@ -270,13 +205,7 @@
 </div>
 
 {#if show && selectedId}
-    <ShowAppointment
-        rejectCall={reject_appointment}
-        approveCall={approve_appointment}
-        appointmentId={selectedId}
-        on:close={handleModalClose}
-        fetchAppointmentCall={get_appointment}
-    />
+    <ShowAppointment appointment_id={selectedId} on:close={handleModalClose} />
 {/if}
 
 <style>

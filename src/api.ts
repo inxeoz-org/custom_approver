@@ -243,7 +243,7 @@ export async function getAppointmentList(params?: {
 }) {
   try {
     const token = get(auth_token);
-    const res = await fetch(APPROVER + "appointment.get_appointment_list", {
+    const res = await fetch(APPROVER + "appointment.list_of_vip_appointments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

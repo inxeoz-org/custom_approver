@@ -3,17 +3,22 @@
     import { Button, Modal, Badge } from "flowbite-svelte";
     import { badgeClass } from "@src/utils.js";
 
-    import { getAppointment } from "@src/api.js";
+    import {
+        approveAppointment,
+        getAppointment,
+        rejectAppointment,
+        cancelAppointment,
+    } from "@src/api.js";
     import StaticShowDarshanAppointment from "@src/routes/StaticShowDarshanAppointment.svelte";
     import { auth_token } from "@src/store.js";
     import { get } from "svelte/store";
     import { toast } from "svelte-sonner";
-    import type { AppointmentFull } from "@src/app.js";
+    import type { Appointment } from "@src/app.js";
     import { stringify } from "postcss";
 
     let workflow_state = "Demo";
 
-    let appointment: AppointmentFull;
+    let appointment: Appointment;
 
     export let appointment_id: string;
 
@@ -27,14 +32,10 @@
     let open = true;
     let showView = false;
 
-    async function refrash_appointment() {
+    async function refresh_appointment() {
         // loading = true;
         if (appointment_id) {
-            const result_data = await getAppointment(
-                get(auth_token),
-                appointment_id,
-            );
-
+            const result_data = await getAppointment(appointment_id);
             appointment = result_data?.message;
         }
     }
@@ -59,25 +60,13 @@
 
     onMount(async () => {
         loading = true;
-        await refrash_appointment();
+        await refresh_appointment();
         window.addEventListener("keydown", onKeydown);
     });
 
     onDestroy(() => {
         window.removeEventListener("keydown", onKeydown);
     });
-
-    async function approve_appointment() {
-        if (!appointment_id) return;
-    }
-
-    function reject_appointment() {
-        if (!appointment_id) return;
-    }
-
-    function cancel_appointment() {
-        if (!appointment_id) return;
-    }
 </script>
 
 <Modal bind:open title="Appointment Details" size="lg" onclose={handleClose}>
@@ -166,19 +155,35 @@
                     <Button
                         color={"green"}
                         size="sm"
-                        onclick={approve_appointment}
+                        onclick={() => {
+                            approveAppointment(appointment_id).then(() => {
+                                refresh_appointment();
+                            });
+                        }}
                     >
                         Approve Appointment
                     </Button>
                     <Button
                         color="orange"
                         size="sm"
-                        onclick={reject_appointment}
+                        onclick={() => {
+                            rejectAppointment(appointment_id).then(() => {
+                                refresh_appointment();
+                            });
+                        }}
                     >
                         Reject Appointment
                     </Button>
 
-                    <Button color="gray" size="sm" onclick={cancel_appointment}>
+                    <Button
+                        color="gray"
+                        size="sm"
+                        onclick={() => {
+                            cancelAppointment(appointment_id).then(() => {
+                                refresh_appointment();
+                            });
+                        }}
+                    >
                         Cancel Appointment
                     </Button>
                 {/if}
