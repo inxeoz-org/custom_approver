@@ -169,6 +169,15 @@
                     {/each}
                 </select>
             {/if}
+
+            {#if appointment.workflow_state != "Draft" && appointment.workflow_state !== "Pending"}
+                <div
+                    class="w-full border border-gray-300 rounded-lg p-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
+                >
+                    {appointment.escort_person ??
+                        "Attender (escort person) not assigned"}
+                </div>
+            {/if}
         </div>
 
         <div>
