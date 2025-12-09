@@ -154,39 +154,6 @@
                                                         openModal(b.name)}
                                                     >Open</Button
                                                 >
-
-                                                {#if b.workflow_state === "Pending"}
-                                                    <Button
-                                                        color="success"
-                                                        class="cursor-pointer"
-                                                        size="xs"
-                                                        onclick={async () => {
-                                                            // quick approve single booking via helper
-                                                            if (!b.name) return;
-                                                            approveAppointment(
-                                                                b.name,
-                                                            ).then(() => {
-                                                                refresh_appointments();
-                                                            });
-                                                        }}>Approve</Button
-                                                    >
-
-                                                    <Button
-                                                        color="failure"
-                                                        class="cursor-pointer"
-                                                        size="xs"
-                                                        onclick={async () => {
-                                                            // quick reject single booking via helper
-                                                            if (!b.name) return;
-                                                            rejectAppointment(
-                                                                b.name,
-                                                            ).then(() => {
-                                                                refresh_appointments();
-                                                                // Handle success or failure
-                                                            });
-                                                        }}>Reject</Button
-                                                    >
-                                                {/if}
                                             </div>
                                         </td>
                                     </tr>
