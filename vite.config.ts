@@ -5,5 +5,10 @@ import { defineConfig } from "vite";
 export default () => {
   return defineConfig({
     plugins: [tailwindcss(), sveltekit()],
+    resolve: {
+      alias: {
+        path: "path-browserify",
+      },
+    },
   });
 };

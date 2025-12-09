@@ -29,6 +29,7 @@
     "svelte"
   ],
   "dependencies": {
+    "path-browserify": "^1.0.1",
     "serve": "^14.2.1",
     "svelte-sonner": "^1.0.5",
     "zod": "^4.1.13"

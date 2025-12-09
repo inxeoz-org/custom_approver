@@ -78,6 +78,7 @@ export const AppointmenSchema = z.object({
   group_size: z.number().int().min(1),
   workflow_state: z.string(),
   devoteee_name: z.string().min(1),
+  devoteee_id: z.string().uuid(),
   escort_person: z.string().uuid().nullable(),
   companion: z.array(CompanionSchema),
 });

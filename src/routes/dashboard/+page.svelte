@@ -107,7 +107,7 @@
                                 class="text-left text-xs uppercase text-slate-500"
                             >
                                 <th class="p-3">Booking ID</th>
-                                <th class="p-3">Type</th>
+
                                 <th class="p-3">Devotee Name</th>
                                 <th class="p-3">Date</th>
                                 <th class="p-3">Status</th>
@@ -129,18 +129,14 @@
                                     ></tr
                                 >
                             {:else}
-                                {#each appointmentList as b (b.name)}
+                                {#each appointmentList as b}
                                     <tr class="border-t">
                                         <td class="p-3 font-medium">{b.name}</td
                                         >
-                                        <td class="p-3 text-sm text-slate-600"
-                                            >{b.appointment_type}</td
-                                        >
-                                        <td class="p-3"
-                                            >{b.primary_devoteee_name}</td
-                                        >
+
+                                        <td class="p-3">{b.devoteee_id}</td>
                                         <td class="p-3 text-sm text-slate-500"
-                                            >{b.appointment_date}</td
+                                            >{b.slot_date}</td
                                         >
                                         <td class="p-3"
                                             ><Badge

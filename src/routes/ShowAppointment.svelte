@@ -16,8 +16,6 @@
     import type { Appointment } from "@src/app.js";
     import { stringify } from "postcss";
 
-    let workflow_state = "Demo";
-
     let appointment: Appointment;
 
     export let appointment_id: string;
@@ -62,6 +60,8 @@
         loading = true;
         await refresh_appointment();
         window.addEventListener("keydown", onKeydown);
+
+        loading = false;
     });
 
     onDestroy(() => {
@@ -151,7 +151,7 @@
 
         <div>
             <div class="flex flex-wrap gap-2 mb-4">
-                {#if workflow_state !== "Pending"}
+                {#if appointment.workflow_state == "Pending"}
                     <Button
                         color={"green"}
                         size="sm"
@@ -174,7 +174,9 @@
                     >
                         Reject Appointment
                     </Button>
+                {/if}
 
+                {#if appointment.workflow_state == "Approved" || appointment.workflow_state == "Rejected"}
                     <Button
                         color="gray"
                         size="sm"
@@ -187,7 +189,6 @@
                         Cancel Appointment
                     </Button>
                 {/if}
-
                 <Button
                     color="light"
                     size="sm"
